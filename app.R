@@ -38,19 +38,37 @@ ui <- fluidPage(
         sidebarPanel(
             textInput("news_head","News Headline",""),
             helpText(" Example : Magnitude 4.5 earthquake strikes Southern California"),
-            submitButton("Run"),
-            helpText("Provide empty string to view all rules"),
+            actionButton("run", "Run"),
+            actionButton("reset", "Clear"), 
+            hr(),
+            #submitButton("Run"),
             tags$br(),
             verbatimTextOutput("processed_text"),
             tags$br(),
             DT::dataTableOutput("rulesDataTable"),
-            width = 5
+            width = 6
         ),
 
-        # Rules Graph viz   
+        # Rules Graph viz
         mainPanel(
-           visNetwork::visNetworkOutput("graphPlot", width='100%', height='800px'),
-           width = 7
+        tabsetPanel(id = "tab",
+            tabPanel("Leaf Node",
+                value = 3,
+                visNetwork::visNetworkOutput("graphPlot3", width='100%', height='800px'),
+                DT::dataTableOutput("rulesDataTable3")
+            ),
+            tabPanel("Middle Node",
+                     value = 2,
+                     visNetwork::visNetworkOutput("graphPlot2", width='100%', height='800px'),
+                     DT::dataTableOutput("rulesDataTable2")
+            ),
+            tabPanel("Parent Node",
+                     value = 1,
+                     visNetwork::visNetworkOutput("graphPlot1", width='100%', height='800px'),
+                     DT::dataTableOutput("rulesDataTable1")
+            )
+        ),
+        width = 6
         )
     )
 )
@@ -68,23 +86,97 @@ server <- function(input, output) {
     reticulate::use_virtualenv(virtualenv_dir, required = T)
 
     # ------------------ App server logic (Edit anything below) --------------- #
-    rules <- read.PMML("rules.pmml")
+    rules1 <- read.PMML("rules1.pmml")
+    rules2 <- read.PMML("rules2.pmml")
+    rules3 <- read.PMML("rules3.pmml")
     reticulate::source_python('text_preprocess.py')
     
-    updated_rules <- shiny::reactive({
-        if(input$news_head == ""){
-            rules
+    news_head <- reactiveValues(data = NULL)
+    
+    observeEvent(input$run, {
+        news_head$data <- input$news_head
+    },ignoreNULL = FALSE)
+    
+    observeEvent(input$reset, {
+        news_head$data <- ""
+    }) 
+    
+    updated_rules3 <- shiny::reactive({
+        if(news_head$data == ""){
+            rules3
         }
         else{
-            li = unlist(strsplit(test_sent(input$news_head),split = " "))
-            r <- subset(rules,subset = rule_match(rules,li))
+            li = unlist(strsplit(test_sent(news_head$data),split = " "))
+            r <- subset(rules3,subset = rule_match(rules3,li))
             r
         }
     })
-    output$processed_text <- renderText(test_sent(input$news_head))
-    output$graphPlot <- visNetwork::renderVisNetwork({
-        plt <- plot(updated_rules(), method='graph', engine='htmlwidget',
-                    control = list(max=800))
+    updated_rules1 <- shiny::reactive({
+        if(news_head$data == ""){
+            rules1
+        }
+        else{
+            li = unlist(strsplit(test_sent(news_head$data),split = " "))
+            r <- subset(rules1,subset = rule_match(rules1,li))
+            r
+        }
+    })
+    updated_rules2 <- shiny::reactive({
+        if(news_head$data == ""){
+            rules2
+        }
+        else{
+            li = unlist(strsplit(test_sent(news_head$data),split = " "))
+            r <- subset(rules2,subset = rule_match(rules2,li))
+            r
+        }
+       
+    })
+    current_DT <- shiny::reactive({
+        print(input$tab)
+        if(input$tab == "1"){
+            updated_rules1()
+        }
+        else if(input$tab == "2"){
+            updated_rules2()
+        }
+        else{
+            updated_rules3()
+        }
+            
+    })
+    output$processed_text <- renderText(test_sent(news_head$data))
+    output$graphPlot1 <- visNetwork::renderVisNetwork({
+        plt <- plot(updated_rules1(), method='graph', engine='htmlwidget',
+                    control = list(max=500))
+        plt$sizingPolicy <- htmlwidgets::sizingPolicy(
+            viewer.paneHeight=1000,
+            browser.defaultHeight=1000,
+            knitr.defaultHeight=1000,
+            defaultHeight=1000,defaultWidth=1000,
+            browser.fill=TRUE
+        )
+        plt$height <- 1000
+        plt$x$height <- 1000
+        plt
+    })
+    output$graphPlot2 <- visNetwork::renderVisNetwork({
+        plt <- plot(updated_rules2(), method='graph', engine='htmlwidget',
+                    control = list(max=500))
+        plt$sizingPolicy <- htmlwidgets::sizingPolicy(
+            viewer.paneHeight=1000,
+            browser.defaultHeight=1000,
+            knitr.defaultHeight=1000,
+            defaultHeight=1000,defaultWidth=1000,
+            browser.fill=TRUE
+        )
+        plt$height <- 1000
+        plt$x$height <- 1000
+        plt
+    })
+    output$graphPlot3 <- visNetwork::renderVisNetwork({
+        plt <- plot(updated_rules3(), method='graph', engine='htmlwidget',
+                    control = list(max=500))
         plt$sizingPolicy <- htmlwidgets::sizingPolicy(
             viewer.paneHeight=1000,
             browser.defaultHeight=1000,
@@ -98,7 +190,7 @@ server <- function(input, output) {
     })
         
     output$rulesDataTable <- DT::renderDataTable({
-        DATAFRAME(updated_rules()) %>% 
+        DATAFRAME(current_DT()) %>% 
             mutate(support = round(support, digits = 5),
                    confidence = round(confidence, digits = 5),
                    lift = round(lift, digits = 5))

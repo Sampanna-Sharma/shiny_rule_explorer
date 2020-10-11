@@ -75,17 +75,17 @@ ui <- fluidPage(
     
 # Define server logic
 server <- function(input, output) {
-    # ------------------ App virtualenv setup (Do not edit) ------------------- #
-    virtualenv_dir = Sys.getenv('VIRTUALENV_NAME')
-    python_path = Sys.getenv('PYTHON_PATH')
-    # Create virtual env and install dependencies
-    if(length(reticulate::virtualenv_list()) == 0){
-    reticulate::virtualenv_create(envname = virtualenv_dir, python = python_path)
-    reticulate::virtualenv_install(virtualenv_dir, packages = PYTHON_DEPENDENCIES,ignore_installed=TRUE)
-    }
-    reticulate::use_virtualenv(virtualenv_dir, required = T)
-
-    # ------------------ App server logic (Edit anything below) --------------- #
+    # # ------------------ App virtualenv setup (Do not edit) ------------------- #
+    # virtualenv_dir = Sys.getenv('VIRTUALENV_NAME')
+    # python_path = Sys.getenv('PYTHON_PATH')
+    # # Create virtual env and install dependencies
+    # if(length(reticulate::virtualenv_list()) == 0){
+    # reticulate::virtualenv_create(envname = virtualenv_dir, python = python_path)
+    # reticulate::virtualenv_install(virtualenv_dir, packages = PYTHON_DEPENDENCIES,ignore_installed=TRUE)
+    # }
+    # reticulate::use_virtualenv(virtualenv_dir, required = T)
+    # 
+    # # ------------------ App server logic (Edit anything below) --------------- #
     rules1 <- read.PMML("rules1.pmml")
     rules2 <- read.PMML("rules2.pmml")
     rules3 <- read.PMML("rules3.pmml")

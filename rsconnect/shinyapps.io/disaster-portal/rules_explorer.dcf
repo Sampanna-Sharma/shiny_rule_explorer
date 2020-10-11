@@ -1,0 +1,13 @@
+name: rules_explorer
+title: rules_explorer
+username:
+account: disaster-portal
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2848414
+bundleId: 3656162
+url: https://disaster-portal.shinyapps.io/rules_explorer/
+when: 1600767851.01205
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .RData|__pycache__/text_preprocess.cpython-38.pyc

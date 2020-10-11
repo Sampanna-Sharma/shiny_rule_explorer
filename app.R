@@ -11,7 +11,7 @@ library(shiny)
 library(tidyverse)
 library(arulesViz)
 
-#library(reticulate)
+library(reticulate)
 library(pmml)
 PYTHON_DEPENDENCIES = c('spacy','en-core-web-sm-mirror')
 
@@ -133,7 +133,6 @@ server <- function(input, output) {
        
     })
     current_DT <- shiny::reactive({
-        print(input$tab)
         if(input$tab == "1"){
             updated_rules1()
         }
